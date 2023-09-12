@@ -63,16 +63,17 @@ O ecossistema avança em etapas de tempo, durante as quais todas as entidades re
 O projeto foi atualizado para usar uma interface web em vez de uma interface textual. O back-end é implementado em C++ usando o framework Crow para criar um serviço REST. A interface web é feita em HTML e JavaScript.
 
 ### Endpoints REST a serem Implementados
+
 Os alunos devem implementar os seguintes endpoints REST em C++ usando o framework Crow:
 
 1. POST /start-simulation: (Re)inicializa a simulação com números iniciais de plantas, herbívoros e carnívoros.
-
-- Request Body: { "plants": 10, "herbivores": 5, "carnivores": 2 }
-- Response: [[" ", "P", "H"], ["C", " ", "P"], ...]
-  
 2. GET /next-iteration: Avança a simulação por uma etapa de tempo.
 
-- Response: - Response: [[" ", "P", "H"], ["C", " ", "P"], ...]
+
+Todo o codigo referente ao processamento do body da requisição `POST /start-simulation` assim como a conversão do grid representando
+o estado da simulação já está pronto, vocês só precisam implmentar a lógica de inicialização da simulação (criação das entidades e colocação inicial no grid).
+
+Para isso vocês devem substituir os comentários `// <YOUR CODE HERE>` no arquivo `src/main.cpp`.
 
 ## Conclusão
 Este projeto oferece uma jornada envolvente no mundo da modelagem e simulação computacional, combinada com habilidades práticas de programação. Através da resolução criativa de problemas e análise crítica, os alunos construirão uma representação visual dinâmica de um ecossistema, abrindo portas para uma exploração mais aprofundada em ciência da computação e no mundo natural.
