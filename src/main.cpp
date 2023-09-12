@@ -79,27 +79,27 @@ int main()
 
     CROW_ROUTE(app, "/start-simulation")
         .methods("POST"_method)([](crow::request &req, crow::response &res)
-                                {
-
-        std::uniform_int_distribution<> distrib(0,NUM_ROWS);
-        
+                                { 
+        // Parse the JSON request body
         nlohmann::json request_body = nlohmann::json::parse(req.body);
-        printf("Received request: %s\n", request_body.dump().c_str());
 
+       // Validate the request body 
         uint32_t total_entinties = (uint32_t)request_body["plants"] + (uint32_t)request_body["herbivores"] + (uint32_t)request_body["carnivores"];
         if (total_entinties > NUM_ROWS * NUM_ROWS) {
-            res.code = 400;
-            res.body = "Too many entities";
-            res.end();
-            return;
+        res.code = 400;
+        res.body = "Too many entities";
+        res.end();
+        return;
         }
 
+        // Clear the entity grid
         entity_grid.clear();
         entity_grid.assign(NUM_ROWS, std::vector<entity_t>(NUM_ROWS, { empty, 0, 0}));
         
         // Create the entities
         // <YOUR CODE HERE>
 
+        // Return the JSON representation of the entity grid
         nlohmann::json json_grid = entity_grid; 
         res.body = json_grid.dump();
         res.end(); });
