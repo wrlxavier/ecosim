@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <title>Ecosim: Ecosystem Simulator</title>
+    <style>
+        #controls-panel,
+        #grid-panel {
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ddd;
+        }
+
+        .small-text {
+            font-size: 8px; /* Smaller font size for energy and age */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mt-4 mb-4">Ecosim: Ecosystem Simulator</h1>
+        <div id="controls-panel" class="bg-light">
+            <h5>Controls <button class="btn btn-link" type="button" data-toggle="collapse"
+                    data-target="#controls-content" aria-expanded="true"
+                    aria-controls="controls-content">Toggle</button></h5>
+            <div id="controls-content" class="collapse show">
+                <table class="table borderless">
+                    <tbody>
+                        <tr>
+                            <td><label for="interval">Update Interval (seconds):</label></td>
+                            <td><input type="number" id="interval" value="1" min="0.1" step="0.1"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="plants">Initial number of Plants:</label></td>
+                            <td><input type="number" id="plants" value="10" min="0"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="herbivores">Initial number of Herbivores:</label></td>
+                            <td><input type="number" id="herbivores" value="5" min="0"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="carnivores">Initial number of Carnivores:</label></td>
+                            <td><input type="number" id="carnivores" value="2" min="0"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <button onclick="startSimulation()" id="start-button" class="btn btn-success ml-2">Start
+                                    Simulation</button>
+                                <button onclick="stopSimulation()" id="stop-button" class="btn btn-danger ml-2"
+                                    disabled>Stop Simulation</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="grid-panel" class="bg-white">
+            <h5><span id="iteration-counter">Iteration 0</span></h5>
+            <div id="grid"></div>
+        </div>
+    </div>
+
+    <script>
+        const entityIcons = {
+            'P': '🌱',
+            'H': '🐰',
+            'C': '🦁',
+            ' ': ' ',
+        };
+
+        let intervalID;
+        let iterationCount = 0;
+
+        function startSimulation() {
+            if (intervalID) clearInterval(intervalID);
+            iterationCount = 0;
+            const plants = parseInt(document.getElementById('plants').value);
+            const herbivores = parseInt(document.getElementById('herbivores').value);
+            const carnivores = parseInt(document.getElementById('carnivores').value);
+
+            fetch('/start-simulation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ plants, herbivores, carnivores }),
+            })
+                .then(() => {
+                    document.getElementById('start-button').disabled = true;
+                    document.getElementById('stop-button').disabled = false;
+                    document.getElementById('interval').disabled = true;
+                    document.getElementById('plants').disabled = true;
+                    document.getElementById('herbivores').disabled = true;
+                    document.getElementById('carnivores').disabled = true;
+                    const interval = parseFloat(document.getElementById('interval').value) * 1000;
+                    intervalID = setInterval(fetchIteration, interval);
+                })
+                .catch(error => console.error('Error starting simulation:', error));
+        }
+
+        function stopSimulation() {
+            clearInterval(intervalID);
+            document.getElementById('start-button').disabled = false;
+            document.getElementById('stop-button').disabled = true;
+            document.getElementById('interval').disabled = false;
+            document.getElementById('plants').disabled = false;
+            document.getElementById('herbivores').disabled = false;
+            document.getElementById('carnivores').disabled = false;
+        }
+        function fetchIteration() {
+            iterationCount++;
+            document.getElementById('iteration-counter').innerText = `Iteration ${iterationCount}`;
+            fetch('/next-iteration')
+                .then(response => response.json())
+                .then(data => updateGrid(data))
+                .catch(error => console.error('Error fetching iteration:', error));
+        }
+
+        function updateGrid(grid) {
+            const gridDiv = document.getElementById('grid');
+            gridDiv.innerHTML = '';
+            grid.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+                row.forEach(cell => {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = `col cell`;
+                    if (cell.type == 'H' || cell.type == 'C') {
+                        cellDiv.innerHTML = `${entityIcons[cell.type] || ' '} <span class="small-text">A:${cell.age} E:${cell.energy}</span>`;
+                    } else if (cell.type == 'P') {
+                        cellDiv.innerHTML = `${entityIcons[cell.type] || ' '} <span class="small-text">A:${cell.age}</span>`;
+                    } else {
+                        cellDiv.innerText = entityIcons[' '] || ' ';
+                    }
+                    rowDiv.appendChild(cellDiv);
+                });
+                gridDiv.appendChild(rowDiv);
+            });
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+
+</html>
